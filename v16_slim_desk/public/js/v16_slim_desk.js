@@ -46,6 +46,11 @@ frappe.ui.SlimDesk = class SlimDesk {
                 </div>
             </div>
         `).prependTo('body');
+
+        // Direct Binding
+        this.wrapper.find('.slim-home-icon').on('click', () => frappe.set_route('/app'));
+        this.wrapper.find('.slim-edit-icon').on('click', () => this.open_customize_dialog());
+
         this.render_items();
     }
 
@@ -107,26 +112,9 @@ frappe.ui.SlimDesk = class SlimDesk {
 
     bind_global_events() {
         const self = this;
-        $(document.body).on('click', '#slim-sidebar .slim-home-icon', () => frappe.set_route('/app'));
-        $(document.body).on('click', '#slim-sidebar .slim-edit-icon', () => self.open_customize_dialog());
-
-        $(document.body).on('click', '#slim-sidebar .slim-icon-wrapper', function () {
-            try {
-                let route = $(this).attr('data-route');
-                $('#slim-sidebar .slim-icon-wrapper').removeClass('active');
-                $(this).addClass('active');
-                if (route) {
-                    if (route.startsWith('/app/')) {
-                        let parts = route.substring(5).split('/');
-                        frappe.set_route(parts);
-                    } else {
-                        frappe.set_route(route);
-                    }
-                }
-            } catch (e) { console.error(e); }
-        });
-
+        // ONLY bind Router/Tooltip logic here. Click events are now direct.
         frappe.router.on('change', () => {
+            // Robust Re-check: If sidebar is missing, rebuild.
             if ($('#slim-sidebar').length === 0) self.setup();
             setTimeout(() => self.highlight_active(), 200);
         });
@@ -153,13 +141,32 @@ frappe.ui.SlimDesk = class SlimDesk {
 
     append_icon($container, item) {
         let icon_html = this.get_icon_html(item);
-        $(`
+        let $item = $(`
             <div class="slim-icon-wrapper" data-route="${item.route}" data-toggle="tooltip" title="${item.tooltip || item.label}">
                 <div class="slim-icon" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
                     ${icon_html}
                 </div>
             </div>
-        `).appendTo($container);
+        `);
+
+        // Direct Click Binding
+        $item.on('click', function () {
+            try {
+                let route = $(this).attr('data-route');
+                $('#slim-sidebar .slim-icon-wrapper').removeClass('active');
+                $(this).addClass('active');
+                if (route) {
+                    if (route.startsWith('/app/')) {
+                        let parts = route.substring(5).split('/');
+                        frappe.set_route(parts);
+                    } else {
+                        frappe.set_route(route);
+                    }
+                }
+            } catch (e) { console.error(e); }
+        });
+
+        $item.appendTo($container);
     }
 
     get_icon_html(item) {

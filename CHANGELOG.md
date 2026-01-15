@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.41] - 2026-01-15
+### Fixed
+- **Unresponsive Icons:** Refactored event binding from global delegation to direct DOM attachment. This resolves an issue where icons became unclickable after a system reload (soft refresh).
+
 ## [v3.40] - 2026-01-14
 ### Fixed
 - **Persistence:** Resolved a critical bug where custom shortcuts were not being saved or loaded correctly due to a duplicate data fetching method. Modifications made to `v16_slim_desk.js`.
