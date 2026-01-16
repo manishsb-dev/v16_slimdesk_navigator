@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include v16_slim_desk *.css
+recursive-include v16_slim_desk *.csv
+recursive-include v16_slim_desk *.html
+recursive-include v16_slim_desk *.ico
+recursive-include v16_slim_desk *.js
+recursive-include v16_slim_desk *.json
+recursive-include v16_slim_desk *.md
+recursive-include v16_slim_desk *.png
+recursive-include v16_slim_desk *.py
+recursive-include v16_slim_desk *.svg
+recursive-include v16_slim_desk *.txt
+recursive-exclude v16_slim_desk *.pyc

@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.54] - 2026-01-16
+### Fixed
+- **Installation:** Added `MANIFEST.in` to explicitly include non-Python assets (`translations`, `public`, `templates`) in the build package. This prevents missing files in Docker/pip installs.
+
 ## [v3.53] - 2026-01-16
 ### Fixed
 - **Installation:** Guaranteed `modules.txt` is 0 bytes (previous fix halted by path error). This ensures the app is treated as a pure plugin with no module sync.
