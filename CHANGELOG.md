@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.55] - 2026-01-16
+### Fixed
+- **Installation:** Re-created `modules.txt` ensuring strict ASCII/UTF-8 encoding (previously contained UTF-16 BOM causing UnicodeDecodeError).
+
 ## [v3.54] - 2026-01-16
 ### Fixed
 - **Installation:** Added `MANIFEST.in` to explicitly include non-Python assets (`translations`, `public`, `templates`) in the build package. This prevents missing files in Docker/pip installs.
