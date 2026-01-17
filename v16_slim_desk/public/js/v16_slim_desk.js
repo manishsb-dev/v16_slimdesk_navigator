@@ -315,44 +315,48 @@ frappe.ui.SlimDesk = class SlimDesk {
             primary_action_label: 'Save Changes',
             primary_action: () => this.save_changes(d)
         });
-    });
+
 
         this.render_sortable_list(d.fields_dict.list_editor.$wrapper, d);
-let $btn_shortcut = d.add_custom_action('Add Shortcut', () => this.prompt_add_item(d, 'shortcut'));
-$btn_shortcut.addClass('mr-2'); // Add spacing
-d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
+        let $btn_shortcut = d.add_custom_action('Add Shortcut', () => this.prompt_add_item(d, 'shortcut'));
+        if ($btn_shortcut) { // Add if block for button existence.
+            if ($btn_shortcut.addClass) {
+                $btn_shortcut.addClass('mr-2'); // Add spacing
+            }
+        }
+        d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
 
-d.show();
+        d.show();
     }
 
-render_sortable_list($parent, dialog) {
-    $parent.html('<div class="slim-sort-list"></div>');
-    const $list = $parent.find('.slim-sort-list');
-    this.config.forEach((item, index) => {
-        $list.append(this.get_sortable_item_html(item, index));
-    });
-    if (typeof Sortable !== 'undefined') {
-        Sortable.create($list[0], { handle: '.slim-drag-handle', animation: 150, ghostClass: 'slim-ghost' });
+    render_sortable_list($parent, dialog) {
+        $parent.html('<div class="slim-sort-list"></div>');
+        const $list = $parent.find('.slim-sort-list');
+        this.config.forEach((item, index) => {
+            $list.append(this.get_sortable_item_html(item, index));
+        });
+        if (typeof Sortable !== 'undefined') {
+            Sortable.create($list[0], { handle: '.slim-drag-handle', animation: 150, ghostClass: 'slim-ghost' });
+        }
+
+        const self = this;
+        // Bind Remove
+        $list.on('click', '.cmd-remove', function () { $(this).closest('.slim-sort-item').remove(); });
+
+        // Bind Edit (Cmd-Edit)
+        $list.on('click', '.cmd-edit', function () {
+            let $row = $(this).closest('.slim-sort-item');
+            let data = JSON.parse($row.attr('data-item'));
+            self.prompt_edit_item(dialog, $row, data);
+        });
     }
 
-    const self = this;
-    // Bind Remove
-    $list.on('click', '.cmd-remove', function () { $(this).closest('.slim-sort-item').remove(); });
-
-    // Bind Edit (Cmd-Edit)
-    $list.on('click', '.cmd-edit', function () {
-        let $row = $(this).closest('.slim-sort-item');
-        let data = JSON.parse($row.attr('data-item'));
-        self.prompt_edit_item(dialog, $row, data);
-    });
-}
-
-get_sortable_item_html(item, index) {
-    let snippet = this.get_icon_html(item);
-    let icon_display = `<div class="slim-list-icon" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center;">${snippet}</div>`;
-    let type_label = item.type === 'shortcut' ? 'Shortcut' : 'Workspace';
-    let item_json = JSON.stringify(item).replace(/"/g, '&quot;');
-    return `
+    get_sortable_item_html(item, index) {
+        let snippet = this.get_icon_html(item);
+        let icon_display = `<div class="slim-list-icon" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center;">${snippet}</div>`;
+        let type_label = item.type === 'shortcut' ? 'Shortcut' : 'Workspace';
+        let item_json = JSON.stringify(item).replace(/"/g, '&quot;');
+        return `
             <div class="slim-sort-item" data-item="${item_json}">
                 <div class="slim-item-left">
                     <div class="slim-drag-handle">${frappe.utils.icon('drag', 'sm')}</div>
@@ -365,164 +369,164 @@ get_sortable_item_html(item, index) {
                 </div>
             </div>
         `;
-}
+    }
 
-add_item_to_list(parent_dialog, item) {
-    const $list = parent_dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-list');
-    $list.append(this.get_sortable_item_html(item));
-}
+    add_item_to_list(parent_dialog, item) {
+        const $list = parent_dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-list');
+        $list.append(this.get_sortable_item_html(item));
+    }
 
-// ...
+    // ...
 
-// [Deleted Duplicate fetch_data method]
+    // [Deleted Duplicate fetch_data method]
 
-prompt_add_item(parent_dialog, type) {
-    if (type === 'workspace') {
-        let options = this.workspaces.map(w => w.name);
+    prompt_add_item(parent_dialog, type) {
+        if (type === 'workspace') {
+            let options = this.workspaces.map(w => w.name);
+            let d = new frappe.ui.Dialog({
+                title: 'Add Workspace', fields: [{ label: 'Workspace', fieldname: 'workspace', fieldtype: 'Select', options: options, reqd: 1 }],
+                primary_action: (values) => {
+                    let w = this.workspaces.find(x => x.name === values.workspace);
+                    if (w) this.add_item_to_list(parent_dialog, this.workspace_to_item(w));
+                    d.hide();
+                }
+            });
+            d.show();
+        } else {
+            // New Shortcut
+            this.show_shortcut_dialog(parent_dialog);
+        }
+    }
+
+    prompt_edit_item(parent_dialog, $row, data) {
+        // Edit Shortcut
+        if (data.type === 'shortcut' || true) { // allow editing workspaces too (custom icon)
+            this.show_shortcut_dialog(parent_dialog, data, $row);
+        }
+    }
+
+    show_shortcut_dialog(parent_dialog, existing_data = null, $existing_row = null) {
+        let is_edit = !!existing_data;
+
         let d = new frappe.ui.Dialog({
-            title: 'Add Workspace', fields: [{ label: 'Workspace', fieldname: 'workspace', fieldtype: 'Select', options: options, reqd: 1 }],
+            title: is_edit ? 'Edit Item' : 'Add Shortcut',
+            fields: [
+                {
+                    label: 'Link Type', fieldname: 'shortcut_type', fieldtype: 'Select',
+                    options: ['DocType', 'Report', 'Page', 'Custom Route'],
+                    default: existing_data && existing_data.link_type ? existing_data.link_type : 'DocType',
+                    reqd: 1
+                },
+                {
+                    label: 'DocType', fieldname: 'ref_doctype', fieldtype: 'Link', options: 'DocType',
+                    depends_on: 'eval:doc.shortcut_type=="DocType"',
+                    default: existing_data && existing_data.ref_doctype ? existing_data.ref_doctype : '',
+                    onchange: () => {
+                        let val = d.get_value('ref_doctype');
+                        if (val) {
+                            if (!d.get_value('label')) d.set_value('label', val);
+                            if (!d.get_value('route')) d.set_value('route', `/app/${frappe.router.slug(val)}`);
+                            frappe.db.get_value('DocType', val, 'icon').then(r => {
+                                if (r && r.message && r.message.icon) d.set_value('icon', r.message.icon);
+                            });
+                        }
+                    }
+                },
+                {
+                    label: 'Report', fieldname: 'ref_report', fieldtype: 'Link', options: 'Report',
+                    depends_on: 'eval:doc.shortcut_type=="Report"',
+                    default: existing_data && existing_data.ref_report ? existing_data.ref_report : '',
+                    onchange: () => {
+                        let val = d.get_value('ref_report');
+                        if (val) {
+                            if (!d.get_value('label')) d.set_value('label', val);
+                            frappe.db.get_value('Report', val, ['report_type', 'ref_doctype', 'is_standard'])
+                                .then(r => {
+                                    if (r && r.message) {
+                                        let report = r.message;
+                                        let route = '';
+                                        if (report.report_type === 'Report Builder') {
+                                            route = `/app/${frappe.router.slug(report.ref_doctype)}/view/report/${val}`;
+                                        } else {
+                                            route = `/app/query-report/${val}`;
+                                        }
+                                        d.set_value('route', route);
+
+                                        // Auto-Fetch Icon from Ref DocType
+                                        if (report.ref_doctype) {
+                                            frappe.db.get_value('DocType', report.ref_doctype, 'icon').then(rr => {
+                                                if (rr && rr.message && rr.message.icon) d.set_value('icon', rr.message.icon);
+                                            });
+                                        }
+                                    }
+                                });
+                        }
+                    }
+                },
+                {
+                    label: 'Page', fieldname: 'ref_page', fieldtype: 'Link', options: 'Page',
+                    depends_on: 'eval:doc.shortcut_type=="Page"',
+                    default: existing_data && existing_data.ref_page ? existing_data.ref_page : '',
+                    onchange: () => {
+                        let val = d.get_value('ref_page');
+                        if (val) {
+                            if (!d.get_value('label')) d.set_value('label', val);
+                            d.set_value('route', `/app/${frappe.router.slug(val)}`);
+                        }
+                    }
+                },
+                { label: 'Label', fieldname: 'label', fieldtype: 'Data', reqd: 1, default: existing_data ? existing_data.label : '' },
+                { label: 'Route', fieldname: 'route', fieldtype: 'Data', reqd: 1, default: existing_data ? existing_data.route : '' },
+                { label: 'Icon', fieldname: 'icon', fieldtype: 'Icon', default: existing_data ? existing_data.icon : '' }
+            ],
             primary_action: (values) => {
-                let w = this.workspaces.find(x => x.name === values.workspace);
-                if (w) this.add_item_to_list(parent_dialog, this.workspace_to_item(w));
+                let new_item = {
+                    type: existing_data ? existing_data.type : 'shortcut', // preserve type
+                    label: values.label,
+                    route: values.route,
+                    icon: values.icon,
+                    use_letter: !values.icon,
+                    // Persist Source Metadata
+                    link_type: values.shortcut_type,
+                    ref_doctype: values.ref_doctype,
+                    ref_report: values.ref_report,
+                    ref_page: values.ref_page
+                };
+
+                if (is_edit && $existing_row) {
+                    $existing_row.replaceWith(this.get_sortable_item_html(new_item));
+                } else {
+                    this.add_item_to_list(parent_dialog, new_item);
+                }
                 d.hide();
             }
         });
+
         d.show();
-    } else {
-        // New Shortcut
-        this.show_shortcut_dialog(parent_dialog);
     }
-}
 
-prompt_edit_item(parent_dialog, $row, data) {
-    // Edit Shortcut
-    if (data.type === 'shortcut' || true) { // allow editing workspaces too (custom icon)
-        this.show_shortcut_dialog(parent_dialog, data, $row);
+    add_item_to_list(dialog, item) {
+        dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-list').append(this.get_sortable_item_html(item));
     }
-}
 
-show_shortcut_dialog(parent_dialog, existing_data = null, $existing_row = null) {
-    let is_edit = !!existing_data;
+    save_changes(dialog) {
+        let new_config = [];
+        dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-item').each(function () {
+            let data = $(this).attr('data-item');
+            if (data) new_config.push(JSON.parse(data));
+        });
+        this.save_config_to_server(new_config, dialog);
+    }
 
-    let d = new frappe.ui.Dialog({
-        title: is_edit ? 'Edit Item' : 'Add Shortcut',
-        fields: [
-            {
-                label: 'Link Type', fieldname: 'shortcut_type', fieldtype: 'Select',
-                options: ['DocType', 'Report', 'Page', 'Custom Route'],
-                default: existing_data && existing_data.link_type ? existing_data.link_type : 'DocType',
-                reqd: 1
-            },
-            {
-                label: 'DocType', fieldname: 'ref_doctype', fieldtype: 'Link', options: 'DocType',
-                depends_on: 'eval:doc.shortcut_type=="DocType"',
-                default: existing_data && existing_data.ref_doctype ? existing_data.ref_doctype : '',
-                onchange: () => {
-                    let val = d.get_value('ref_doctype');
-                    if (val) {
-                        if (!d.get_value('label')) d.set_value('label', val);
-                        if (!d.get_value('route')) d.set_value('route', `/app/${frappe.router.slug(val)}`);
-                        frappe.db.get_value('DocType', val, 'icon').then(r => {
-                            if (r && r.message && r.message.icon) d.set_value('icon', r.message.icon);
-                        });
-                    }
-                }
-            },
-            {
-                label: 'Report', fieldname: 'ref_report', fieldtype: 'Link', options: 'Report',
-                depends_on: 'eval:doc.shortcut_type=="Report"',
-                default: existing_data && existing_data.ref_report ? existing_data.ref_report : '',
-                onchange: () => {
-                    let val = d.get_value('ref_report');
-                    if (val) {
-                        if (!d.get_value('label')) d.set_value('label', val);
-                        frappe.db.get_value('Report', val, ['report_type', 'ref_doctype', 'is_standard'])
-                            .then(r => {
-                                if (r && r.message) {
-                                    let report = r.message;
-                                    let route = '';
-                                    if (report.report_type === 'Report Builder') {
-                                        route = `/app/${frappe.router.slug(report.ref_doctype)}/view/report/${val}`;
-                                    } else {
-                                        route = `/app/query-report/${val}`;
-                                    }
-                                    d.set_value('route', route);
-
-                                    // Auto-Fetch Icon from Ref DocType
-                                    if (report.ref_doctype) {
-                                        frappe.db.get_value('DocType', report.ref_doctype, 'icon').then(rr => {
-                                            if (rr && rr.message && rr.message.icon) d.set_value('icon', rr.message.icon);
-                                        });
-                                    }
-                                }
-                            });
-                    }
-                }
-            },
-            {
-                label: 'Page', fieldname: 'ref_page', fieldtype: 'Link', options: 'Page',
-                depends_on: 'eval:doc.shortcut_type=="Page"',
-                default: existing_data && existing_data.ref_page ? existing_data.ref_page : '',
-                onchange: () => {
-                    let val = d.get_value('ref_page');
-                    if (val) {
-                        if (!d.get_value('label')) d.set_value('label', val);
-                        d.set_value('route', `/app/${frappe.router.slug(val)}`);
-                    }
-                }
-            },
-            { label: 'Label', fieldname: 'label', fieldtype: 'Data', reqd: 1, default: existing_data ? existing_data.label : '' },
-            { label: 'Route', fieldname: 'route', fieldtype: 'Data', reqd: 1, default: existing_data ? existing_data.route : '' },
-            { label: 'Icon', fieldname: 'icon', fieldtype: 'Icon', default: existing_data ? existing_data.icon : '' }
-        ],
-        primary_action: (values) => {
-            let new_item = {
-                type: existing_data ? existing_data.type : 'shortcut', // preserve type
-                label: values.label,
-                route: values.route,
-                icon: values.icon,
-                use_letter: !values.icon,
-                // Persist Source Metadata
-                link_type: values.shortcut_type,
-                ref_doctype: values.ref_doctype,
-                ref_report: values.ref_report,
-                ref_page: values.ref_page
-            };
-
-            if (is_edit && $existing_row) {
-                $existing_row.replaceWith(this.get_sortable_item_html(new_item));
-            } else {
-                this.add_item_to_list(parent_dialog, new_item);
-            }
-            d.hide();
-        }
-    });
-
-    d.show();
-}
-
-add_item_to_list(dialog, item) {
-    dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-list').append(this.get_sortable_item_html(item));
-}
-
-save_changes(dialog) {
-    let new_config = [];
-    dialog.fields_dict.list_editor.$wrapper.find('.slim-sort-item').each(function () {
-        let data = $(this).attr('data-item');
-        if (data) new_config.push(JSON.parse(data));
-    });
-    this.save_config_to_server(new_config, dialog);
-}
-
-save_config_to_server(new_config, dialog) {
-    this.config = new_config;
-    this.render_items();
-    if (dialog) dialog.hide();
-    frappe.call({
-        method: "v16_slim_desk.api.save_config", args: { workspaces: new_config },
-        callback: (r) => { if (!r.exc) frappe.show_alert({ message: 'Saved', indicator: 'green' }); }
-    });
-}
+    save_config_to_server(new_config, dialog) {
+        this.config = new_config;
+        this.render_items();
+        if (dialog) dialog.hide();
+        frappe.call({
+            method: "v16_slim_desk.api.save_config", args: { workspaces: new_config },
+            callback: (r) => { if (!r.exc) frappe.show_alert({ message: 'Saved', indicator: 'green' }); }
+        });
+    }
 };
 
 $(document).ready(function () { new frappe.ui.SlimDesk(); });
