@@ -177,27 +177,17 @@ frappe.ui.SlimDesk = class SlimDesk {
             let debug_mode = (item.name === 'Assets' || item.name === 'Buying' || item.label === 'Assets');
 
             // Safe Runtime Fallback (Check existence of globals first)
-            // Use frappe.boot.workspaces.pages (Verified Source)
             if (item.type === 'workspace' && frappe.boot && frappe.boot.workspaces && frappe.boot.workspaces.pages) {
                 let found_page = frappe.boot.workspaces.pages.find(p => p.name === item.name || p.title === item.label);
-
-                if (debug_mode) {
-                    console.log(`[SlimDesk Debug] Lookup '${item.name}':`, found_page ? "Found" : "Not Found");
-                    if (found_page) console.log(`   -> Boot Icon: ${found_page.icon}`);
-                }
-
                 if (found_page && found_page.icon) {
                     icon_val = found_page.icon;
                 }
             } else if (item.type === 'workspace' && frappe.boot && frappe.boot.workspace_sidebar_item && frappe.boot.workspace_sidebar_item.pages) {
-                // Backup check if the other one is missing
                 let found_page = frappe.boot.workspace_sidebar_item.pages.find(p => p.name === item.name || p.title === item.label);
                 if (found_page && found_page.icon) {
                     icon_val = found_page.icon;
                 }
             }
-
-            if (debug_mode) console.log(`   -> Final Icon Logic: ${icon_val}`);
 
             // Shortcuts Fallback
             if ((!icon_val || icon_val === 'folder' || icon_val === 'shortcut') && item.type === 'shortcut' && item.route && frappe.boot && frappe.boot.doctype_icons) {
@@ -208,28 +198,7 @@ frappe.ui.SlimDesk = class SlimDesk {
                 }
             }
 
-            // Letter Fallback
-            if (item.use_letter || !icon_val || icon_val === 'folder') {
-                let letter = '?';
-                if (frappe.get_abbr) {
-                    letter = frappe.get_abbr(item.label || item.name);
-                } else if (item.label || item.name) {
-                    letter = (item.label || item.name).charAt(0).toUpperCase();
-                }
-                return `<div class="slim-text-tile"><span class="slim-text-icon">${letter}</span></div>`;
-            }
-
-            // 1. Force Overrides by Workspace NAME (Highest Priority)
-            // Fixes "Subcontracting" sharing the same DB icon key ("organization") as Manufacturing
-            if (item.name === 'Subcontracting') {
-                return `<img src="/assets/erpnext/desktop_icons/subcontracting.svg" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
-            }
-            if (item.name === 'Build') {
-                // The "Build" workspace (separate from Frappe Builder)
-                return `<img src="/assets/frappe/icons/desktop_icons/subtle/build.svg" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
-            }
-
-            // Explicit File Mapping for ERPNext Modules (Preserve "Gold Bars", etc.)
+            // Explicit File Mapping (PRIORITY OVER LETTER FALLBACK)
             const SVG_MAP = {
                 // Key = Icon Name in Database | Value = Verified File Path
                 'assets': '/assets/erpnext/desktop_icons/asset.svg',
@@ -250,32 +219,46 @@ frappe.ui.SlimDesk = class SlimDesk {
                 'accounting': '/assets/erpnext/desktop_icons/accounting.svg',
                 'table': '/assets/erpnext/desktop_icons/financials_reports.svg',
                 'financial_reports': '/assets/erpnext/desktop_icons/financials_reports.svg',
-
-                // Frappe Builder - Use FontAwesome Rocket as fallback for broken image
                 'getting-started': 'fa fa-rocket',
-
-                // Build Fallback
                 'hammer': '/assets/frappe/icons/desktop_icons/subtle/build.svg',
                 'bone': 'fa fa-bone',
                 'amazon': 'fa fa-amazon',
                 'cart': 'fa fa-shopping-cart'
             };
 
-            // FontAwesome Validation (Standard + Builder Fix)
-            if (SVG_MAP[icon_val] && SVG_MAP[icon_val].startsWith('fa ')) {
-                return `<i class="${SVG_MAP[icon_val]}" style="font-size: 18px;"></i>`;
+            // 1. Check Explicit Map (Images/FA) - PRIORITY
+            if (SVG_MAP[icon_val]) {
+                if (SVG_MAP[icon_val].startsWith('fa ')) {
+                    return `<i class="${SVG_MAP[icon_val]}" style="font-size: 18px;"></i>`;
+                }
+                return `<img src="${SVG_MAP[icon_val]}" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
             }
+
+            // 2. FontAwesome Generic
             if (icon_val && (icon_val.includes('fa ') || icon_val.includes('fa-'))) {
                 return `<i class="${icon_val}" style="width:auto;height:auto;"></i>`;
             }
 
-            // Check Explicit Map (Images)
-            if (SVG_MAP[icon_val]) {
-                return `<img src="${SVG_MAP[icon_val]}" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
+            // 3. Force Overrides by Workspace NAME
+            if (item.name === 'Subcontracting') {
+                return `<img src="/assets/erpnext/desktop_icons/subcontracting.svg" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
+            }
+            if (item.name === 'Build') {
+                return `<img src="/assets/frappe/icons/desktop_icons/subtle/build.svg" class="slim-svg-icon" style="width: 20px; height: 20px;">`;
             }
 
-            // SVG Standard (Frappe Utils) - Fallback for everything else
-            // This uses the symbols loaded by the system (lucide/icons.svg)
+            // 4. Letter Fallback (Only if no icon found above)
+            if (item.use_letter || !icon_val || icon_val === 'folder') {
+                let letter = '?';
+                if (frappe.get_abbr) {
+                    letter = frappe.get_abbr(item.label || item.name);
+                } else if (item.label || item.name) {
+                    letter = (item.label || item.name).charAt(0).toUpperCase();
+                }
+                return `<div class="slim-text-tile"><span class="slim-text-icon">${letter}</span></div>`;
+            }
+
+            // 5. SVG Standard (Frappe Utils) - Last Resort
             if (frappe.utils.icon) {
                 return frappe.utils.icon(icon_val, 'md');
             } else {
@@ -336,20 +319,24 @@ frappe.ui.SlimDesk = class SlimDesk {
                             this.render_items();
                             frappe.msgprint("Sidebar reset to defaults.");
                             d.hide();
-                            // Optional: Re-open dialog to show reset state? 
-                            // this.open_customize_dialog(); 
                         }
                     });
                 });
             });
-            // Float Reset to the left? By default actions are left-aligned.
-            // Let's separate Add buttons.
+            // Improve Styling: Smaller Font, Better Spacing
+            if ($btn_reset) $btn_reset.css({ 'font-size': '12px' });
 
             let $btn_shortcut = d.add_custom_action('Add Shortcut', () => this.prompt_add_item(d, 'shortcut'));
             if ($btn_shortcut) {
-                $btn_shortcut.css('margin-right', '10px'); // Explicit spacing
+                // Force spacing and size
+                $btn_shortcut.css({ 'margin-right': '15px', 'font-size': '12px' });
+                $btn_shortcut.addClass('mr-3'); // Bootstrap class as backup
             }
-            d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
+
+            let $btn_workspace = d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
+            if ($btn_workspace) {
+                $btn_workspace.css({ 'font-size': '12px' });
+            }
 
             d.show();
             console.log("SlimDesk: Dialog Shown");
