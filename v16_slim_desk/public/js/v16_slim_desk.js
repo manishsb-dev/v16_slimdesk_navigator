@@ -328,7 +328,8 @@ frappe.ui.SlimDesk = class SlimDesk {
 
             let $btn_shortcut = d.add_custom_action('Add Shortcut', () => this.prompt_add_item(d, 'shortcut'));
             if ($btn_shortcut) {
-                $btn_shortcut.addClass('btn-sm me-2'); // Standard spacing
+                $btn_shortcut.addClass('btn-sm');
+                $btn_shortcut.css('margin-right', '15px'); // Explicit spacing (Bootstrap override)
             }
 
             let $btn_workspace = d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
