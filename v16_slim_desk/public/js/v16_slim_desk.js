@@ -323,13 +323,17 @@ frappe.ui.SlimDesk = class SlimDesk {
                     });
                 });
             });
-            // Use Standard Bootstrap Classes/Frappe Utils
-            if ($btn_reset) $btn_reset.addClass('btn-xs text-muted');
+            // Use Standard Bootstrap Classes + Aggressive Spacing
+            if ($btn_reset) {
+                $btn_reset.addClass('btn-xs text-muted');
+                $btn_reset.css('margin-right', '30px'); // Group separator
+            }
 
             let $btn_shortcut = d.add_custom_action('Add Shortcut', () => this.prompt_add_item(d, 'shortcut'));
             if ($btn_shortcut) {
+                // Explicit margin with !important equivalent (jQuery .css applies inline)
                 $btn_shortcut.addClass('btn-sm');
-                $btn_shortcut.css('margin-right', '15px'); // Explicit spacing (Bootstrap override)
+                $btn_shortcut.css('margin-right', '20px');
             }
 
             let $btn_workspace = d.add_custom_action('Add Workspace', () => this.prompt_add_item(d, 'workspace'));
