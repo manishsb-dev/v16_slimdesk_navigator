@@ -59,8 +59,8 @@ Add shortcuts to DocTypes, specific Reports, or Pages.
 *   **ERPNext:** v15, v16+
 
 ## Release History
+*   **v3.82:** Branding refinement & Icon resizing (24px Unified).
 *   **v3.79:** Unified Blue Box UI (24px) & Sticky Highlight Fix.
-*   **v3.75:** Full Bleed UI (Maximized Icons).
 *   **v3.70:** Logic fixes for Workspace Dropdown sync and improved focus handling.
 *   **v3.6x:** Stability improvements and Docker compatibility fixes.
 *   **v3.35:** Initial Public Release.

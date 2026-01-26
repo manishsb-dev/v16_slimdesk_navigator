@@ -1,5 +1,12 @@
 # Changelog
 
+## [v3.82] - 2026-01-26
+### Changed
+- **UI:** Branding text "SlimDesk" moved to the absolute bottom (5px margin) for maximum vertical spacing.
+- **UI:** Refined Branding typography to "Slim**Desk**" (Normal/Bold).
+- **UI:** Resized Home & Edit icons to exactly match the list style (24px Wrapper / 18px Icon).
+- **UI:** Added "SlimDesk" branding element to the sidebar footer.
+
 ## [v3.79] - 2026-01-26
 ### Changed
 - **UI:** Finalized "Unified Blue Box" style. Wrappers are now **24px** with **3px spacing**.
