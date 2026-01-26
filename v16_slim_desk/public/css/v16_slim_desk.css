@@ -1,4 +1,4 @@
-/* SlimDesk Sidebar Styles - Dark Theme v3.82 */
+/* SlimDesk Sidebar Styles - Dark Theme v3.83 */
 
 body {
     padding-left: 60px !important;
@@ -178,14 +178,14 @@ body {
 }
 
 /* Icons - Full Bleed 100% (of 24px) */
-.icon-lg {
+#slim-sidebar .icon-lg {
     width: 100%;
     height: 100%;
     stroke: currentColor;
     fill: none;
 }
 
-.icon-md {
+#slim-sidebar .icon-md {
     width: 100%;
     height: 100%;
     stroke: currentColor;
@@ -231,11 +231,8 @@ body {
     /* Center Vertically */
 }
 
-/* Tooltip */
-.tooltip {
-    pointer-events: none;
-    position: fixed !important;
-}
+/* Tooltip - Removed global override to prevent side effects */
+/* Custom tooltip styling should be done via specific classes if needed */
 
 /* Sortable List */
 .slim-sort-list {
