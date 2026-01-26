@@ -56,3 +56,8 @@ Add shortcuts to DocTypes, specific Reports, or Pages.
 ## Compatibility
 *   **Frappe Framework:** v15, v16+
 *   **ERPNext:** v15, v16+
+
+## Release History
+*   **v3.70:** Logic fixes for Workspace Dropdown sync and improved focus handling.
+*   **v3.6x:** Stability improvements and Docker compatibility fixes.
+*   **v3.35:** Initial Public Release.

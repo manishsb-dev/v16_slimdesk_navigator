@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.70] - 2026-01-26
+### Fixed
+- **Highlight Sync:** Sidebar now correctly updates the active item when switching workspaces via the native Frappe dropdown (fixed routing mismatch for paths like `Workspaces/Home`).
+- **Visuals:** Resolved "Sticky Halo" issue where focus rings persisted on icons after clicking. Icons now aggressively clear focus to maintain a clean aesthetic.
+- **Cleanup:** Removed all debug logging for production release.
+
 ## [v3.56] - 2026-01-16
 ### Fixed
 - **Installation:** Switched build backend from `flit` to `setuptools` to fix critical Docker installation issues. `flit` was ignoring `MANIFEST.in`, causing assets and sometimes the module itself to be missing in wheel builds. `setuptools` ensures reliable packaging.
