@@ -18,6 +18,9 @@ build-backend = "setuptools.build_meta"
 packages = ["v16_slim_desk"]
 include-package-data = true
 
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0-dev,<17.0.0-dev"
+
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
 
